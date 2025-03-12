@@ -1,0 +1,22 @@
+---
+- name: Setup Docker rootless on Debian minimal
+  hosts: all
+  become: true
+  vars_files:
+    - vars.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.11
+
+  roles:
+    - role: common
+      tags: ['common']
+    - role: docker
+      tags: ['docker']
+    - role: user
+      tags: ['user']
+
+# run only one tasks :
+# use ansible-playbook playbook.yml --tags "common"
+
+# become auth with password (sudo with password):
+# ansible-playbook -i inventory.ini playbook.yml --tags "common" --ask-vault-pass

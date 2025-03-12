@@ -1,0 +1,27 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install prerequisites using apt
+  ansible.builtin.apt:
+    name:
+      - uidmap
+      - dbus-user-session
+      - fuse-overlayfs
+      - python3
+      - python3-pip
+      - systemd-container
+      - slirp4netns
+      - acl
+    state: present
+
+- name: Check architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: architecture
+  changed_when: false
+
+- name: Set architecture fact
+  ansible.builtin.set_fact:
+    system_arch: "{{ 'arm64' if 'arm64' in architecture.stdout else 'amd64' }}"

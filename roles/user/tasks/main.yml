@@ -1,0 +1,104 @@
+---
+- name: Ensure user exists
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Register local SSH public key
+  ansible.builtin.set_fact:
+    ssh_key: "{{ lookup('file', user_ssh_key_file) }}"
+  delegate_to: localhost
+  run_once: true
+  become: false
+
+- name: Append public key to authorized_keys file
+  become: true
+  become_user: "{{ user_name }}"
+  ansible.posix.authorized_key:
+    user: "{{ user_name }}"
+    key: "{{ ssh_key }}"
+
+- name: Create .ansible directory with correct permissions
+  become: true
+  ansible.builtin.file:
+    path: "/home/{{ user_name }}/.ansible"
+    state: directory
+    mode: '0700'
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+
+- name: Add Docker to user PATH and set file permissions
+  become: true
+  become_user: "{{ user_name }}"
+  ansible.builtin.blockinfile:
+    path: "/home/{{ user_name }}/.bashrc"
+    create: true
+    mode: '0644'
+    marker: "# {mark} DOCKER ENVIRONMENT CONFIGURATION"
+    block: |
+      export PATH=/home/{{ user_name }}/bin:$PATH
+      export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+
+- name: Check if Docker rootless is already installed
+  ansible.builtin.stat:
+    path: "/home/{{ user_name }}/.config/systemd/user/docker.service"
+  register: docker_service_file
+  become: true
+  become_user: "{{ user_name }}"
+
+- name: Setup Docker rootless via machinectl
+  ansible.builtin.command: machinectl shell {{ user_name }}@ /bin/bash -c "dockerd-rootless-setuptool.sh install"
+  register: docker_setup_result
+  changed_when: docker_setup_result.rc == 0
+  failed_when: docker_setup_result.rc != 0 and 'already' not in docker_setup_result.stderr
+  when: not docker_service_file.stat.exists
+
+- name: Start and enable Docker service for user with machinectl
+  ansible.builtin.command: machinectl shell {{ user_name }}@ /bin/bash -c "systemctl --user enable --now docker"
+  register: docker_service_result
+  changed_when: docker_service_result.rc == 0
+  failed_when: docker_service_result.rc != 0 and 'Failed to connect to bus' not in docker_service_result.stderr
+  when: not docker_service_file.stat.exists or docker_setup_result.changed
+
+# Add example command for Nginx with html directory as root
+- name: Create example Nginx command in user's home
+  ansible.builtin.copy:
+    dest: "/home/{{ user_name }}/run-nginx.sh"
+    content: |
+      #!/bin/bash
+      docker run -d --restart always --name nginx -p 8080:80 -v $(pwd)/html:/usr/share/nginx/html nginx:latest
+    mode: '0755'
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+
+- name: Create HTML directory
+  ansible.builtin.file:
+    path: "/home/{{ user_name }}/html"
+    state: directory
+    mode: '0755'
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+
+- name: Create index.html with Hello World
+  ansible.builtin.copy:
+    dest: "/home/{{ user_name }}/html/index.html"
+    content: |
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Hello World</title>
+        </head>
+        <body>
+          <h1>Hello World!</h1>
+          <p>This is a test page served by Nginx container in a rootless docker environment.</p>
+          <p>(c) 2025 by st3vebrush</p>
+        </body>
+      </html>
+    mode: '0644'
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+
+- name: Enable lingering for systemd user services
+  ansible.builtin.command: loginctl enable-linger {{ user_name }}
+  changed_when: false

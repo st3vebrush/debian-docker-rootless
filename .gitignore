@@ -1,0 +1,80 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Ansible
+.ansible/
+
+# Vagrant
+.vagrant/
+
+# sensitive data
+*.retry
+vault.yml
+vault.yaml
+*vault.yml
+*vault.yaml
+
+# SSH Keys
+*.pem
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.key
+known_hosts
+authorized_keys
+
+# Credentials and Secrets
+*.password
+*.keystore
+*.p12
+*.pfx
+credentials.yml
+credentials.yaml
+*credentials.yml
+*credentials.yaml
+.env*
+*.secret

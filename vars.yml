@@ -1,0 +1,5 @@
+---
+# Default variables for both Vagrant and direct Ansible usage
+docker_version: "5:28.0.1-1~debian.12~bookworm"
+user_name: "dockeruser"
+user_ssh_key_file: "~/.ssh/id_rsa.pub"

@@ -1,0 +1,37 @@
+---
+- name: Download Docker repository key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker repository to APT sources
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ system_arch }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/debian
+      {{ ansible_facts['distribution_release'] }} stable
+    state: present
+
+- name: Install default Docker
+  ansible.builtin.apt:
+    name: docker-ce={{ docker_version }}
+    state: present
+    update_cache: true
+
+- name: Disable docker service
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: false
+    state: stopped
+
+- name: Disable docker socket
+  ansible.builtin.systemd:
+    name: docker.socket
+    enabled: false
+    state: stopped
+
+- name: Remove /var/run/docker.sock
+  ansible.builtin.file:
+    path: /var/run/docker.sock
+    state: absent

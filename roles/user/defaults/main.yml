@@ -1,0 +1,3 @@
+---
+user_name: dockeruser
+user_ssh_key_file: "~/.ssh/id_rsa.pub"
