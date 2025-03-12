@@ -1,4 +1,4 @@
-Docker rootless using Ansible on a debian VM
+### Docker rootless using Ansible on a debian VM
 
 This Ansible playbook configures a running Debian VM with Docker in rootless mode for enhanced security. It can be used with either an existing Debian VM or automatically with Vagrant. The playbook creates a dedicated non-privileged user 'dockeruser' that can only run containers in isolation from the host system. For secure access, 'dockeruser' can only be reached via SSH using the specific key defined in the inventory file, ensuring strict access control.
 
